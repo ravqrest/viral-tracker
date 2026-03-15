@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viral İçerik Takipçisi</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f0f0f;
+            color: #e1e1e1;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #e94560;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo i { font-size: 28px; color: #e94560; }
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 5px;
+            background: rgba(255,255,255,0.05);
+            padding: 4px;
+            border-radius: 12px;
+        }
+        .nav-tab {
+            padding: 8px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #888;
+            transition: all 0.3s;
+            border: none;
+            background: none;
+        }
+        .nav-tab:hover { color: #fff; }
+        .nav-tab.active {
+            background: #e94560;
+            color: #fff;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Filters Bar */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 12px;
+            border: 2px solid #2a2a3e;
+            background: #1a1a2e;
+            color: #fff;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        select {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid #2a2a3e;
+            background: #1a1a2e;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        select:focus { outline: none; border-color: #e94560; }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: #fff;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(233,69,96,0.4); }
+        .btn-secondary {
+            background: #2a2a3e;
+            color: #ccc;
+        }
+
+        /* Stats Overview */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #1a1a2e, #1e1e36);
+            border: 1px solid #2a2a3e;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { color: #e94560; }
+
+        /* Video Grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .video-card {
+            background: #1a1a2e;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2a2a3e;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .video-card:hover {
+            transform: translateY(-5px);
+            border-color: #e94560;
+            box-shadow: 0 10px 30px rgba(233,69,96,0.15);
+        }
+        .video-card .thumb-container {
+            position: relative;
+            padding-top: 56.25%;
+            background: #111;
+        }
+        .video-card .thumb-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .viral-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .rank-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            border: 2px solid #e94560;
+        }
+        .video-info {
+            padding: 16px;
+        }
+        .video-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .video-info .channel {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+        .video-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .video-stat {
+            background: rgba(255,255,255,0.03);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .video-stat .value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .video-stat .label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+        }
+        .video-stat.viral .value { color: #e94560; }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .chart-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 16px;
+            padding: 20px;
+        }
+        .chart-card h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-card h3 i { color: #e94560; font-size: 16px; }
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        /* Detail Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            overflow-y: auto;
+            padding: 30px;
+        }
+        .modal-overlay.active { display: flex; justify-content: center; }
+        .modal {
+            background: #1a1a2e;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #2a2a3e;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 24px;
+            border-bottom: 1px solid #2a2a3e;
+        }
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.4;
+            flex: 1;
+            margin-right: 15px;
+        }
+        .modal-close {
+            background: #2a2a3e;
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .modal-body { padding: 24px; }
+        .detail-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .detail-stat {
+            background: rgba(255,255,255,0.03);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .detail-stat .value {
+            font-size: 22px;
+            font-weight: 800;
+        }
+        .detail-stat .label {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+        .detail-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .detail-chart {
+            background: rgba(255,255,255,0.02);
+            padding: 15px;
+            border-radius: 12px;
+        }
+        .detail-chart h4 {
+            font-size: 13px;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+        .channel-info-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.03);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .channel-info-card img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .tag {
+            background: rgba(233,69,96,0.15);
+            color: #e94560;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        /* Compare Section */
+        .compare-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border-top: 2px solid #e94560;
+            padding: 12px 30px;
+            z-index: 150;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .compare-bar.active { display: flex; }
+        .compare-items {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .compare-chip {
+            background: #2a2a3e;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .compare-chip .remove {
+            cursor: pointer;
+            color: #e94560;
+        }
+
+        /* Sections */
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+        .loading i { font-size: 32px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .charts-section, .detail-charts { grid-template-columns: 1fr; }
+            .video-grid { grid-template-columns: 1fr; }
+            .nav-tabs { display: none; }
+            .filters { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">
+        <i class="fas fa-fire"></i>
+        <h1>Viral Tracker</h1>
+    </div>
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('trending')">
+            <i class="fas fa-chart-line"></i> Trendler
+        </button>
+        <button class="nav-tab" onclick="switchTab('search')">
+            <i class="fas fa-search"></i> Keşfet
+        </button>
+        <button class="nav-tab" onclick="switchTab('compare')">
+            <i class="fas fa-balance-scale"></i> Karşılaştır
+        </button>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- TRENDING SECTION -->
+    <div id="section-trending" class="page-section active">
+        <div class="filters">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Viral içerik ara..." onkeypress="if(event.key==='Enter') searchVideos()">
+            </div>
+            <select id="regionSelect" onchange="loadTrending()">
+                <option value="TR">🇹🇷 Türkiye</option>
+                <option value="US">🇺🇸 ABD</option>
+                <option value="GB">🇬🇧 İngiltere</option>
+                <option value="DE">🇩🇪 Almanya</option>
+                <option value="FR">🇫🇷 Fransa</option>
+                <option value="JP">🇯🇵 Japonya</option>
+                <option value="KR">🇰🇷 Güney Kore</option>
+                <option value="BR">🇧🇷 Brezilya</option>
+            </select>
+            <select id="categorySelect" onchange="loadTrending()">
+                <option value="0">Tüm Kategoriler</option>
+                <option value="1">Film</option>
+                <option value="2">Otomobil</option>
+                <option value="10">Müzik</option>
+                <option value="15">Hayvanlar</option>
+                <option value="17">Spor</option>
+                <option value="20">Oyun</option>
+                <option value="22">Blog</option>
+                <option value="23">Komedi</option>
+                <option value="24">Eğlence</option>
+                <option value="25">Haber</option>
+                <option value="26">Stil</option>
+                <option value="27">Eğitim</option>
+                <option value="28">Bilim & Teknoloji</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadTrending()">
+                <i class="fas fa-sync-alt"></i> Yenile
+            </button>
+        </div>
+
+        <div class="stats-overview" id="statsOverview"></div>
+
+        <div class="charts-section">
+            <div class="chart-card">
+                <h3><i class="fas fa-eye"></i> İzlenme Dağılımı (Top 10)</h3>
+                <div class="chart-container">
+                    <canvas id="viewsChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-fire-alt"></i> Viral Skor Karşılaştırma</h3>
+                <div class="chart-container">
+                    <canvas id="viralChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-heart"></i> Etkileşim Oranları (%)</h3>
+                <div class="chart-container">
+                    <canvas id="engagementChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-tachometer-alt"></i> Saatlik İzlenme Hızı</h3>
+                <div class="chart-container">
+                    <canvas id="speedChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <div class="section-title"><i class="fas fa-fire"></i> Trend Videolar</div>
+        </div>
+        <div class="video-grid" id="videoGrid"></div>
+    </div>
+
+    <!-- SEARCH SECTION -->
+    <div id="section-search" class="page-section">
+        <div class="filters">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchQueryInput" placeholder="Ne arıyorsun? (örn: yapay zeka, oyun, müzik)">
+            </div>
+            <select id="searchOrder">
+                <option value="viewCount">En Çok İzlenen</option>
+                <option value="date">En Yeni</option>
+                <option value="relevance">İlgili</option>
+                <option value="rating">En Beğenilen</option>
+            </select>
+            <select id="searchPeriod">
+                <option value="">Tüm Zamanlar</option>
+                <option value="1">Son 24 Saat</option>
+                <option value="7" selected>Son 7 Gün</option>
+                <option value="30">Son 30 Gün</option>
+                <option value="90">Son 3 Ay</option>
+            </select>
+            <button class="btn btn-primary" onclick="searchVideos()">
+                <i class="fas fa-search"></i> Ara
+            </button>
+        </div>
+        <div class="video-grid" id="searchGrid"></div>
+    </div>
+
+    <!-- COMPARE SECTION -->
+    <div id="section-compare" class="page-section">
+        <div class="filters">
+            <div class="search-box">
+                <i class="fas fa-link"></i>
+                <input type="text" id="compareInput" placeholder="YouTube video URL veya ID yapıştır">
+            </div>
+            <button class="btn btn-primary" onclick="addToCompare()">
+                <i class="fas fa-plus"></i> Ekle
+            </button>
+            <button class="btn btn-secondary" onclick="runCompare()">
+                <i class="fas fa-balance-scale"></i> Karşılaştır
+            </button>
+        </div>
+        <div id="compareList" style="margin-bottom:15px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+        <div class="charts-section" id="compareCharts" style="display:none;">
+            <div class="chart-card" style="grid-column: span 2;">
+                <h3><i class="fas fa-chart-bar"></i> Karşılaştırma Sonuçları</h3>
+                <div class="chart-container" style="height:350px;">
+                    <canvas id="compareChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="video-grid" id="compareGrid"></div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modalTitle"></h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+let trendingData = [];
+let compareIds = [];
+let charts = {};
+
+// Format numbers
+function formatNum(n) {
+    if (n >= 1000000000) return (n/1000000000).toFixed(1) + 'B';
+    if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+    return n.toString();
+}
+
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('tr-TR', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+// Switch tabs
+function switchTab(tab) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    event.target.closest('.nav-tab').classList.add('active');
+    document.getElementById('section-' + tab).classList.add('active');
+}
+
+// Load trending
+async function loadTrending() {
+    const region = document.getElementById('regionSelect').value;
+    const category = document.getElementById('categorySelect').value;
+    const grid = document.getElementById('videoGrid');
+    grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Trend veriler yükleniyor...</p></div>';
+
+    try {
+        const resp = await fetch(`/api/trending?region=${region}&category=${category}&limit=20`);
+        const data = await resp.json();
+        trendingData = data;
+        renderStats(data);
+        renderCharts(data);
+        renderVideoGrid(data, 'videoGrid');
+    } catch(e) {
+        grid.innerHTML = '<div class="loading"><p style="color:#e94560;">Hata: Veriler yüklenemedi. API key kontrol edin.</p></div>';
+    }
+}
+
+// Stats overview
+function renderStats(data) {
+    if (!data.length) return;
+    const totalViews = data.reduce((s,v) => s + v.viewCount, 0);
+    const totalLikes = data.reduce((s,v) => s + v.likeCount, 0);
+    const avgEngagement = (data.reduce((s,v) => s + v.engagement, 0) / data.length).toFixed(2);
+    const topViral = data[0];
+
+    document.getElementById('statsOverview').innerHTML = `
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value">${formatNum(totalViews)}</div>
+            <div class="stat-label">Toplam İzlenme</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">❤️</div>
+            <div class="stat-value">${formatNum(totalLikes)}</div>
+            <div class="stat-label">Toplam Beğeni</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-value">${avgEngagement}%</div>
+            <div class="stat-label">Ort. Etkileşim</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-value">${formatNum(topViral.viralScore)}</div>
+            <div class="stat-label">En Yüksek Viral Skor</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-value">${formatNum(topViral.viewsPerHour)}</div>
+            <div class="stat-label">Maks İzlenme/Saat</div>
+        </div>
+    `;
+}
+
+// Charts
+function renderCharts(data) {
+    const top10 = data.slice(0, 10);
+    const labels = top10.map(v => v.title.substring(0, 25) + '...');
+    const colors = ['#e94560','#ff6b6b','#ffa502','#ff6348','#7bed9f','#70a1ff','#5352ed','#eccc68','#ff4757','#2ed573'];
+
+    // Views Chart (Bar)
+    if (charts.views) charts.views.destroy();
+    charts.views = new Chart(document.getElementById('viewsChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'İzlenme',
+                data: top10.map(v => v.viewCount),
+                backgroundColor: colors.map(c => c + '80'),
+                borderColor: colors,
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => formatNum(ctx.raw) + ' izlenme' } }
+            },
+            scales: {
+                y: { ticks: { color: '#666', callback: v => formatNum(v) }, grid: { color: '#1e1e36' } },
+                x: { ticks: { color: '#666', maxRotation: 45 }, grid: { display: false } }
+            }
+        }
+    });
+
+    // Viral Score (Horizontal Bar)
+    if (charts.viral) charts.viral.destroy();
+    charts.viral = new Chart(document.getElementById('viralChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Viral Skor',
+                data: top10.map(v => v.viralScore),
+                backgroundColor: 'rgba(233,69,96,0.6)',
+                borderColor: '#e94560',
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => 'Viral Skor: ' + formatNum(ctx.raw) } }
+            },
+            scales: {
+                x: { ticks: { color: '#666', callback: v => formatNum(v) }, grid: { color: '#1e1e36' } },
+                y: { ticks: { color: '#888', font: { size: 10 } }, grid: { display: false } }
+            }
+        }
+    });
+
+    // Engagement (Doughnut)
+    if (charts.engagement) charts.engagement.destroy();
+    charts.engagement = new Chart(document.getElementById('engagementChart'), {
+        type: 'doughnut',
+        data: {
+            labels: top10.map(v => v.channel.substring(0,15)),
+            datasets: [{
+                data: top10.map(v => v.engagement),
+                backgroundColor: colors,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { color: '#888', font: { size: 10 }, padding: 8 } },
+                tooltip: { callbacks: { label: ctx => ctx.label + ': %' + ctx.raw } }
+            }
+        }
+    });
+
+    // Speed Chart (Line)
+    if (charts.speed) charts.speed.destroy();
+    charts.speed = new Chart(document.getElementById('speedChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'İzlenme/Saat',
+                data: top10.map(v => v.viewsPerHour),
+                borderColor: '#e94560',
+                backgroundColor: 'rgba(233,69,96,0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#e94560',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => formatNum(ctx.raw) + '/saat' } }
+            },
+            scales: {
+                y: { ticks: { color: '#666', callback: v => formatNum(v) }, grid: { color: '#1e1e36' } },
+                x: { ticks: { color: '#666', maxRotation: 45 }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+// Render video cards
+function renderVideoGrid(data, containerId) {
+    const grid = document.getElementById(containerId);
+    if (!data.length) {
+        grid.innerHTML = '<div class="loading"><p>Sonuç bulunamadı.</p></div>';
+        return;
+    }
+    grid.innerHTML = data.map((v, i) => `
+        <div class="video-card" onclick="openDetail('${v.id}')">
+            <div class="thumb-container">
+                <img src="${v.thumbnail}" alt="${v.title}" loading="lazy">
+                <div class="rank-badge">${i+1}</div>
+                <div class="viral-badge"><i class="fas fa-fire"></i> ${formatNum(v.viralScore)}</div>
+            </div>
+            <div class="video-info">
+                <h3>${v.title}</h3>
+                <div class="channel"><i class="fas fa-user"></i> ${v.channel} · ${v.hoursSince < 24 ? v.hoursSince + ' saat önce' : Math.round(v.hoursSince/24) + ' gün önce'}</div>
+                <div class="video-stats">
+                    <div class="video-stat">
+                        <div class="value">${formatNum(v.viewCount)}</div>
+                        <div class="label">İzlenme</div>
+                    </div>
+                    <div class="video-stat">
+                        <div class="value">${formatNum(v.likeCount)}</div>
+                        <div class="label">Beğeni</div>
+                    </div>
+                    <div class="video-stat viral">
+                        <div class="value">${formatNum(v.viewsPerHour)}/sa</div>
+                        <div class="label">İzlenme Hızı</div>
+                    </div>
+                    <div class="video-stat">
+                        <div class="value">${v.engagement}%</div>
+                        <div class="label">Etkileşim</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Search
+async function searchVideos() {
+    const query = document.getElementById('searchQueryInput')?.value || document.getElementById('searchInput')?.value;
+    if (!query) return;
+
+    // Switch to search tab
+    switchTabDirect('search');
+
+    const order = document.getElementById('searchOrder').value;
+    const period = document.getElementById('searchPeriod').value;
+    const grid = document.getElementById('searchGrid');
+    grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Aranıyor...</p></div>';
+
+    try {
+        const resp = await fetch(`/api/search?q=${encodeURIComponent(query)}&order=${order}&after=${period}`);
+        const data = await resp.json();
+        renderVideoGrid(data, 'searchGrid');
+    } catch(e) {
+        grid.innerHTML = '<div class="loading"><p style="color:#e94560;">Arama hatası.</p></div>';
+    }
+}
+
+function switchTabDirect(tab) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => {
+        if(t.textContent.toLowerCase().includes(tab === 'trending' ? 'trend' : tab === 'search' ? 'keşfet' : 'karşı')) t.classList.add('active');
+    });
+    document.getElementById('section-' + tab).classList.add('active');
+}
+
+// Video detail modal
+async function openDetail(videoId) {
+    const modal = document.getElementById('detailModal');
+    const body = document.getElementById('modalBody');
+    document.getElementById('modalTitle').textContent = 'Yükleniyor...';
+    body.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+    modal.classList.add('active');
+
+    try {
+        const resp = await fetch(`/api/video/${videoId}`);
+        const v = await resp.json();
+        document.getElementById('modalTitle').textContent = v.title;
+
+        let channelHtml = '';
+        if (v.channelInfo?.name) {
+            channelHtml = `
+                <div class="channel-info-card">
+                    <img src="${v.channelInfo.thumbnail}" alt="${v.channelInfo.name}">
+                    <div>
+                        <div style="font-weight:600;">${v.channelInfo.name}</div>
+                        <div style="font-size:12px;color:#888;">${formatNum(v.channelInfo.subscribers)} abone · ${formatNum(v.channelInfo.videoCount)} video</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let tagsHtml = '';
+        if (v.tags?.length) {
+            tagsHtml = '<div class="tags-container">' + v.tags.map(t => `<span class="tag">#${t}</span>`).join('') + '</div>';
+        }
+
+        body.innerHTML = `
+            ${channelHtml}
+            <div class="detail-stats">
+                <div class="detail-stat">
+                    <div class="value" style="color:#e94560;">${formatNum(v.viralScore)}</div>
+                    <div class="label">🔥 Viral Skor</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="value">${formatNum(v.viewCount)}</div>
+                    <div class="label">👁️ İzlenme</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="value">${formatNum(v.likeCount)}</div>
+                    <div class="label">❤️ Beğeni</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="value">${formatNum(v.commentCount)}</div>
+                    <div class="label">💬 Yorum</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="value">${formatNum(v.viewsPerHour)}/sa</div>
+                    <div class="label">⚡ İzlenme Hızı</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="value">${v.engagement}%</div>
+                    <div class="label">📊 Etkileşim</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="value">${v.likeRatio}%</div>
+                    <div class="label">👍 Beğeni Oranı</div>
+                </div>
+                <div class="detail-stat">
+                    <div class="value">${formatNum(v.viewsPerDay)}/gün</div>
+                    <div class="label">📅 Günlük İzlenme</div>
+                </div>
+            </div>
+            <div class="detail-charts">
+                <div class="detail-chart">
+                    <h4>Metrik Dağılımı</h4>
+                    <canvas id="detailRadar" height="200"></canvas>
+                </div>
+                <div class="detail-chart">
+                    <h4>İzlenme vs Etkileşim</h4>
+                    <canvas id="detailBar" height="200"></canvas>
+                </div>
+            </div>
+            <div style="margin-bottom:10px;font-size:12px;color:#888;">
+                <i class="fas fa-calendar"></i> Yayınlanma: ${formatDate(v.publishedAt)} · ${v.daysSince} gün önce
+            </div>
+            <div style="font-size:13px;color:#aaa;line-height:1.6;margin-bottom:10px;">
+                ${v.description || 'Açıklama yok.'}
+            </div>
+            ${tagsHtml}
+            <div style="margin-top:15px;">
+                <a href="https://youtube.com/watch?v=${v.id}" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-block;">
+                    <i class="fab fa-youtube"></i> YouTube'da İzle
+                </a>
+            </div>
+        `;
+
+        // Detail Radar Chart
+        new Chart(document.getElementById('detailRadar'), {
+            type: 'radar',
+            data: {
+                labels: ['İzlenme', 'Beğeni', 'Yorum', 'Hız', 'Etkileşim'],
+                datasets: [{
+                    data: [
+                        Math.min(v.viewCount / 1000000, 100),
+                        Math.min(v.likeCount / 10000, 100),
+                        Math.min(v.commentCount / 1000, 100),
+                        Math.min(v.viewsPerHour / 10000, 100),
+                        Math.min(v.engagement * 10, 100)
+                    ],
+                    backgroundColor: 'rgba(233,69,96,0.2)',
+                    borderColor: '#e94560',
+                    pointBackgroundColor: '#e94560'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { r: { ticks: { display: false }, grid: { color: '#2a2a3e' }, pointLabels: { color: '#888', font: { size: 10 } } } }
+            }
+        });
+
+        // Detail Bar Chart
+        new Chart(document.getElementById('detailBar'), {
+            type: 'bar',
+            data: {
+                labels: ['İzlenme', 'Beğeni', 'Yorum'],
+                datasets: [{
+                    data: [v.viewCount, v.likeCount, v.commentCount],
+                    backgroundColor: ['rgba(233,69,96,0.6)', 'rgba(112,161,255,0.6)', 'rgba(126,189,159,0.6)'],
+                    borderColor: ['#e94560', '#70a1ff', '#7bed9f'],
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { ticks: { color: '#666', callback: v => formatNum(v) }, grid: { color: '#1e1e36' } },
+                    x: { ticks: { color: '#888' }, grid: { display: false } }
+                }
+            }
+        });
+
+    } catch(e) {
+        body.innerHTML = '<p style="color:#e94560;">Detay yüklenemedi.</p>';
+    }
+}
+
+function closeModal() {
+    document.getElementById('detailModal').classList.remove('active');
+}
+
+// Compare
+function addToCompare() {
+    let input = document.getElementById('compareInput').value.trim();
+    if (!input) return;
+
+    // Extract video ID from URL
+    if (input.includes('youtube.com')) {
+        const url = new URL(input);
+        input = url.searchParams.get('v') || input;
+    } else if (input.includes('youtu.be/')) {
+        input = input.split('youtu.be/')[1].split('?')[0];
+    }
+
+    if (!compareIds.includes(input)) {
+        compareIds.push(input);
+        renderCompareList();
+    }
+    document.getElementById('compareInput').value = '';
+}
+
+function renderCompareList() {
+    document.getElementById('compareList').innerHTML = compareIds.map(id => `
+        <div class="compare-chip">
+            ${id}
+            <span class="remove" onclick="removeCompare('${id}')">&times;</span>
+        </div>
+    `).join('');
+}
+
+function removeCompare(id) {
+    compareIds = compareIds.filter(i => i !== id);
+    renderCompareList();
+}
+
+async function runCompare() {
+    if (compareIds.length < 2) { alert('En az 2 video ekle!'); return; }
+
+    const grid = document.getElementById('compareGrid');
+    grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+
+    try {
+        const resp = await fetch(`/api/compare?ids=${compareIds.join(',')}`);
+        const data = await resp.json();
+        renderVideoGrid(data, 'compareGrid');
+
+        // Compare chart
+        document.getElementById('compareCharts').style.display = 'grid';
+        if (charts.compare) charts.compare.destroy();
+
+        charts.compare = new Chart(document.getElementById('compareChart'), {
+            type: 'bar',
+            data: {
+                labels: data.map(v => v.title.substring(0, 20) + '...'),
+                datasets: [
+                    {
+                        label: 'İzlenme',
+                        data: data.map(v => v.viewCount),
+                        backgroundColor: 'rgba(233,69,96,0.6)',
+                        borderColor: '#e94560',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Beğeni',
+                        data: data.map(v => v.likeCount),
+                        backgroundColor: 'rgba(112,161,255,0.6)',
+                        borderColor: '#70a1ff',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Yorum',
+                        data: data.map(v => v.commentCount),
+                        backgroundColor: 'rgba(126,189,159,0.6)',
+                        borderColor: '#7bed9f',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#888' } },
+                    tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + formatNum(ctx.raw) } }
+                },
+                scales: {
+                    y: { ticks: { color: '#666', callback: v => formatNum(v) }, grid: { color: '#1e1e36' } },
+                    x: { ticks: { color: '#888' }, grid: { display: false } }
+                }
+            }
+        });
+    } catch(e) {
+        grid.innerHTML = '<p style="color:#e94560;">Karşılaştırma hatası.</p>';
+    }
+}
+
+// Close modal on overlay click
+document.getElementById('detailModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// Escape to close modal
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// Auto-refresh every 60 seconds
+setInterval(() => {
+    if (document.getElementById('section-trending').classList.contains('active')) {
+        loadTrending();
+    }
+}, 60000);
+
+// Initial load
+loadTrending();
+</script>
+</body>
+</html>
