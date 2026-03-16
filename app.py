@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-API_KEY = os.environ.get('YOUTUBE_API_KEY', '')
+API_KEY = os.environ.get('YOUTUBE_API_KEY', '') or 'BURAYA_KEY'
 
 BASE_URL = 'https://www.googleapis.com/youtube/v3'
 
