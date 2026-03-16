@@ -32,6 +32,10 @@ def trending():
     resp = requests.get(f'{BASE_URL}/videos', params=params)
     data = resp.json()
 
+    # Hata varsa göster
+    if 'error' in data:
+        return jsonify({'api_error': data['error']['message'], 'code': data['error']['code']}), 400
+
     videos = []
     for item in data.get('items', []):
         snippet = item['snippet']
